@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="description" content="2026 FIFAワールドカップ試合日程">
+    <title>2026 FIFAワールドカップ</title>
+    <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiMjAyNiBGSUZBV29ybGRDdXAiLCJzaG9ydF9uYW1lIjoiV0MyMDI2IiwiZGVzY3JpcHRpb24iOiIyMDI2IEZJRkHjgafjgqvjgqrjg5fjg6s5oCDmjIflrprlh6DnkIbnpLrjg5fjg4Pjg7PjgqvjgqEiLCJzdGFydF91cmwiOiIuL2luZGV4Lmh0bWwiLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsInRoZW1lX2NvbG9yIjoiIzFhMWExYSIsImJhY2tncm91bmRfY29sb3IiOiIjZmZmZmZmIiwib3JpZW50YXRpb24iOiJwb3J0cmFpdCIsImljb25zIjpbeyJzcmMiOiJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaWGgwY0hNNkx5OXdjbTl2WjNsbGMzTXhMaTluYVd4c2IzZHVjMlJ2TDJSaGRHRXZabWx6YzNWaGMyMWxMbU52YlE9PSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WC2026">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --bg-light: #ffffff;
+            --bg-secondary: #f3f4f6;
+            --text-light: #1f2937;
+            --text-secondary: #6b7280;
+            --border-light: #e5e7eb;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-light: #1a1a1a;
+                --bg-secondary: #2d2d2d;
+                --text-light: #f9fafb;
+                --text-secondary: #d1d5db;
+                --border-light: #3f3f3f;
+            }
+        }
+
+        html, body {
+            width: 100%;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-light);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1rem;
+            padding-top: max(1rem, env(safe-area-inset-top));
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            display: flex;
+            border-bottom: 1px solid var(--border-light);
+            background-color: var(--bg-light);
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        nav button {
+            flex: 1;
+            min-width: 80px;
+            padding: 0.75rem;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        nav button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1rem;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .tab {
+            display: none;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card.highlight {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+            border: 2px solid var(--primary);
+        }
+
+        .card.completed {
+            opacity: 0.6;
+        }
+
+        .match-card {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .match-team {
+            text-align: center;
+        }
+
+        .match-team-flag {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .match-team-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        .match-center {
+            text-align: center;
+            border-left: 1px solid var(--border-light);
+            border-right: 1px solid var(--border-light);
+            padding: 0 1rem;
+        }
+
+        .match-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .match-time {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .match-location {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .match-countdown {
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-top: 0.5rem;
+            font-weight: 600;
+        }
+
+        .match-stage {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            margin-top: 0.5rem;
+        }
+
+        .search-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-light);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        .search-button {
+            padding: 0.75rem 1rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .filter-chips {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .section-title {
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            padding: 1rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-light);
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 480px) {
+            .match-team-name {
+                font-size: 0.8rem;
+            }
+            .match-team-flag {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>⚽ 2026 FIFAワールドカップ</h1>
+            <p>北中米開催 | 試合日程</p>
+        </header>
+
+        <nav>
+            <button class="nav-btn active" data-tab="home">ホーム</button>
+            <button class="nav-btn" data-tab="seven-days">7日間</button>
+            <button class="nav-btn" data-tab="all">全試合</button>
+            <button class="nav-btn" data-tab="search">検索</button>
+        </nav>
+
+        <div class="content">
+            <div class="tab active" id="home-tab">
+                <div>
+                    <p class="section-title">次の試合</p>
+                    <div id="next-match-container"></div>
+                </div>
+
+                <div>
+                    <p class="section-title">次の日本代表戦</p>
+                    <div id="next-japan-match-container"></div>
+                </div>
+
+                <div>
+                    <p class="section-title">今後7日間の試合</p>
+                    <div id="seven-days-preview-container"></div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-matches">0</div>
+                        <div class="stat-label">残り試合</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="days-remaining">0</div>
+                        <div class="stat-label">日残り</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab" id="seven-days-tab">
+                <div id="seven-days-container"></div>
+            </div>
+
+            <div class="tab" id="all-tab">
+                <div id="all-matches-container"></div>
+            </div>
+
+            <div class="tab" id="search-tab">
+                <div class="search-container">
+                    <input type="text" id="search-input" class="search-input" placeholder="国名で検索...">
+                    <button class="search-button" id="search-button">検索</button>
+                </div>
+                <div id="group-filter" class="filter-chips"></div>
+                <div id="search-results-container"></div>
+            </div>
+        </div>
+
+        <footer>
+            <p>2026 FIFAワールドカップ | カナダ・メキシコ・USA | 6月11日〜6月28日</p>
+        </footer>
+    </div>
+
+    <script>
+        const MATCHES = [
+            // グループA
+            { group: "A", team1: "🇲🇽 メキシコ", team2: "🇿🇦 南アフリカ", date: "2026-06-12", time: "04:00", location: "メキシコシティ" },
+            { group: "A", team1: "🇰🇷 韓国", team2: "🇨🇿 チェコ", date: "2026-06-12", time: "11:00", location: "グアダラハラ" },
+            { group: "A", team1: "🇨🇿 チェコ", team2: "🇿🇦 南アフリカ", date: "2026-06-19", time: "01:00", location: "アトランタ" },
+            { group: "A", team1: "🇲🇽 メキシコ", team2: "🇰🇷 韓国", date: "2026-06-19", time: "10:00", location: "グアダラハラ" },
+            { group: "A", team1: "🇿🇦 南アフリカ", team2: "🇰🇷 韓国", date: "2026-06-25", time: "10:00", location: "モンテレイ" },
+            { group: "A", team1: "🇨🇿 チェコ", team2: "🇲🇽 メキシコ", date: "2026-06-25", time: "10:00", location: "メキシコシティ" },
+
+            // グループB
+            { group: "B", team1: "🇨🇦 カナダ", team2: "🇧🇦 ボスニア・ヘルツェゴビナ", date: "2026-06-13", time: "04:00", location: "トロント" },
+            { group: "B", team1: "🇶🇦 カタール", team2: "🇨🇭 スイス", date: "2026-06-14", time: "04:00", location: "サンフランシスコ" },
+            { group: "B", team1: "🇨🇭 スイス", team2: "🇧🇦 ボスニア・ヘルツェゴビナ", date: "2026-06-19", time: "04:00", location: "ロサンゼルス" },
+            { group: "B", team1: "🇨🇦 カナダ", team2: "🇶🇦 カタール", date: "2026-06-19", time: "07:00", location: "バンクーバー" },
+            { group: "B", team1: "🇨🇭 スイス", team2: "🇨🇦 カナダ", date: "2026-06-25", time: "04:00", location: "バンクーバー" },
+            { group: "B", team1: "🇧🇦 ボスニア・ヘルツェゴビナ", team2: "🇶🇦 カタール", date: "2026-06-25", time: "04:00", location: "シアトル" },
+
+            // グループC
+            { group: "C", team1: "🇧🇷 ブラジル", team2: "🇲🇦 モロッコ", date: "2026-06-14", time: "07:00", location: "ニューヨーク" },
+            { group: "C", team1: "🇭🇹 ハイチ", team2: "🇬🇧 スコットランド", date: "2026-06-14", time: "10:00", location: "ボストン" },
+            { group: "C", team1: "🇬🇧 スコットランド", team2: "🇲🇦 モロッコ", date: "2026-06-20", time: "07:00", location: "ボストン" },
+            { group: "C", team1: "🇧🇷 ブラジル", team2: "🇭🇹 ハイチ", date: "2026-06-20", time: "10:00", location: "フィラデルフィア" },
+            { group: "C", team1: "🇬🇧 スコットランド", team2: "🇧🇷 ブラジル", date: "2026-06-25", time: "07:00", location: "マイアミ" },
+            { group: "C", team1: "🇲🇦 モロッコ", team2: "🇭🇹 ハイチ", date: "2026-06-25", time: "07:00", location: "アトランタ" },
+
+            // グループD
+            { group: "D", team1: "🇺🇸 アメリカ", team2: "🇵🇾 パラグアイ", date: "2026-06-13", time: "10:00", location: "ロサンゼルス" },
+            { group: "D", team1: "🇦🇺 オーストラリア", team2: "🇹🇷 トルコ", date: "2026-06-14", time: "13:00", location: "バンクーバー" },
+            { group: "D", team1: "🇺🇸 アメリカ", team2: "🇦🇺 オーストラリア", date: "2026-06-20", time: "04:00", location: "シアトル" },
+            { group: "D", team1: "🇹🇷 トルコ", team2: "🇵🇾 パラグアイ", date: "2026-06-20", time: "13:00", location: "サンフランシスコ" },
+            { group: "D", team1: "🇹🇷 トルコ", team2: "🇺🇸 アメリカ", date: "2026-06-26", time: "11:00", location: "ロサンゼルス" },
+            { group: "D", team1: "🇵🇾 パラグアイ", team2: "🇦🇺 オーストラリア", date: "2026-06-26", time: "11:00", location: "サンフランシスコ" },
+
+            // グループE
+            { group: "E", team1: "🇩🇪 ドイツ", team2: "🇨🇼 キュラソー", date: "2026-06-15", time: "02:00", location: "ヒューストン" },
+            { group: "E", team1: "🇨🇮 コートジボワール", team2: "🇪🇨 エクアドル", date: "2026-06-15", time: "08:00", location: "フィラデルフィア" },
+            { group: "E", team1: "🇩🇪 ドイツ", team2: "🇨🇮 コートジボワール", date: "2026-06-21", time: "05:00", location: "トロント" },
+            { group: "E", team1: "🇪🇨 エクアドル", team2: "🇨🇼 キュラソー", date: "2026-06-21", time: "09:00", location: "カンザスシティ" },
+            { group: "E", team1: "🇨🇼 キュラソー", team2: "🇨🇮 コートジボワール", date: "2026-06-26", time: "05:00", location: "フィラデルフィア" },
+            { group: "E", team1: "🇪🇨 エクアドル", team2: "🇩🇪 ドイツ", date: "2026-06-26", time: "05:00", location: "ニューヨーク" },
+
+            // グループF - 日本
+            { group: "F", team1: "🇳🇱 オランダ", team2: "🇯🇵 日本", date: "2026-06-15", time: "05:00", location: "ダラス" },
+            { group: "F", team1: "🇸🇪 スウェーデン", team2: "🇹🇳 チュニジア", date: "2026-06-15", time: "11:00", location: "モンテレイ" },
+            { group: "F", team1: "🇳🇱 オランダ", team2: "🇸🇪 スウェーデン", date: "2026-06-21", time: "02:00", location: "ヒューストン" },
+            { group: "F", team1: "🇹🇳 チュニジア", team2: "🇯🇵 日本", date: "2026-06-21", time: "13:00", location: "モンテレイ" },
+            { group: "F", team1: "🇯🇵 日本", team2: "🇸🇪 スウェーデン", date: "2026-06-26", time: "08:00", location: "ダラス" },
+            { group: "F", team1: "🇹🇳 チュニジア", team2: "🇳🇱 オランダ", date: "2026-06-26", time: "08:00", location: "カンザスシティ" },
+
+            // グループG
+            { group: "G", team1: "🇧🇪 ベルギー", team2: "🇪🇬 エジプト", date: "2026-06-16", time: "04:00", location: "シアトル" },
+            { group: "G", team1: "🇮🇷 イラン", team2: "🇳🇿 ニュージーランド", date: "2026-06-16", time: "10:00", location: "ロサンゼルス" },
+            { group: "G", team1: "🇧🇪 ベルギー", team2: "🇮🇷 イラン", date: "2026-06-22", time: "04:00", location: "ロサンゼルス" },
+            { group: "G", team1: "🇳🇿 ニュージーランド", team2: "🇪🇬 エジプト", date: "2026-06-22", time: "10:00", location: "バンクーバー" },
+            { group: "G", team1: "🇪🇬 エジプト", team2: "🇮🇷 イラン", date: "2026-06-27", time: "12:00", location: "シアトル" },
+            { group: "G", team1: "🇳🇿 ニュージーランド", team2: "🇧🇪 ベルギー", date: "2026-06-27", time: "12:00", location: "バンクーバー" },
+
+            // グループH
+            { group: "H", team1: "🇪🇸 スペイン", team2: "🇨🇻 カーボベルデ", date: "2026-06-16", time: "01:00", location: "アトランタ" },
+            { group: "H", team1: "🇸🇦 サウジアラビア", team2: "🇺🇾 ウルグアイ", date: "2026-06-16", time: "07:00", location: "マイアミ" },
+            { group: "H", team1: "🇪🇸 スペイン", team2: "🇸🇦 サウジアラビア", date: "2026-06-22", time: "01:00", location: "アトランタ" },
+            { group: "H", team1: "🇺🇾 ウルグアイ", team2: "🇨🇻 カーボベルデ", date: "2026-06-22", time: "07:00", location: "マイアミ" },
+            { group: "H", team1: "🇨🇻 カーボベルデ", team2: "🇸🇦 サウジアラビア", date: "2026-06-27", time: "09:00", location: "ヒューストン" },
+            { group: "H", team1: "🇺🇾 ウルグアイ", team2: "🇪🇸 スペイン", date: "2026-06-27", time: "09:00", location: "グアダラハラ" },
+
+            // グループI
+            { group: "I", team1: "🇫🇷 フランス", team2: "🇸🇳 セネガル", date: "2026-06-17", time: "04:00", location: "ニューヨーク" },
+            { group: "I", team1: "🇮🇶 イラク", team2: "🇳🇴 ノルウェー", date: "2026-06-17", time: "07:00", location: "ボストン" },
+            { group: "I", team1: "🇫🇷 フランス", team2: "🇮🇶 イラク", date: "2026-06-23", time: "06:00", location: "フィラデルフィア" },
+            { group: "I", team1: "🇳🇴 ノルウェー", team2: "🇸🇳 セネガル", date: "2026-06-23", time: "09:00", location: "ニューヨーク" },
+            { group: "I", team1: "🇳🇴 ノルウェー", team2: "🇫🇷 フランス", date: "2026-06-27", time: "04:00", location: "ボストン" },
+            { group: "I", team1: "🇸🇳 セネガル", team2: "🇮🇶 イラク", date: "2026-06-27", time: "04:00", location: "トロント" },
+
+            // グループJ
+            { group: "J", team1: "🇦🇷 アルゼンチン", team2: "🇩🇿 アルジェリア", date: "2026-06-17", time: "10:00", location: "カンザスシティ" },
+            { group: "J", team1: "🇦🇹 オーストリア", team2: "🇯🇴 ヨルダン", date: "2026-06-17", time: "13:00", location: "サンフランシスコ" },
+            { group: "J", team1: "🇦🇷 アルゼンチン", team2: "🇦🇹 オーストリア", date: "2026-06-23", time: "02:00", location: "ダラス" },
+            { group: "J", team1: "🇯🇴 ヨルダン", team2: "🇩🇿 アルジェリア", date: "2026-06-23", time: "12:00", location: "サンフランシスコ" },
+            { group: "J", team1: "🇩🇿 アルジェリア", team2: "🇦🇹 オーストリア", date: "2026-06-28", time: "11:00", location: "カンザスシティ" },
+            { group: "J", team1: "🇯🇴 ヨルダン", team2: "🇦🇷 アルゼンチン", date: "2026-06-28", time: "11:00", location: "ダラス" },
+
+            // グループK
+            { group: "K", team1: "🇵🇹 ポルトガル", team2: "🇨🇩 コンゴ民主共和国", date: "2026-06-18", time: "02:00", location: "ヒューストン" },
+            { group: "K", team1: "🇺🇿 ウズベキスタン", team2: "🇨🇴 コロンビア", date: "2026-06-18", time: "11:00", location: "メキシコシティ" },
+            { group: "K", team1: "🇵🇹 ポルトガル", team2: "🇺🇿 ウズベキスタン", date: "2026-06-24", time: "02:00", location: "ヒューストン" },
+            { group: "K", team1: "🇨🇴 コロンビア", team2: "🇨🇩 コンゴ民主共和国", date: "2026-06-24", time: "11:00", location: "グアダラハラ" },
+            { group: "K", team1: "🇨🇴 コロンビア", team2: "🇵🇹 ポルトガル", date: "2026-06-28", time: "08:30", location: "マイアミ" },
+            { group: "K", team1: "🇨🇩 コンゴ民主共和国", team2: "🇺🇿 ウズベキスタン", date: "2026-06-28", time: "08:30", location: "アトランタ" },
+
+            // グループL
+            { group: "L", team1: "🇬🇧 イングランド", team2: "🇭🇷 クロアチア", date: "2026-06-18", time: "05:00", location: "ダラス" },
+            { group: "L", team1: "🇬🇭 ガーナ", team2: "🇵🇦 パナマ", date: "2026-06-18", time: "08:00", location: "トロント" },
+            { group: "L", team1: "🇬🇧 イングランド", team2: "🇬🇭 ガーナ", date: "2026-06-24", time: "05:00", location: "ボストン" },
+            { group: "L", team1: "🇵🇦 パナマ", team2: "🇭🇷 クロアチア", date: "2026-06-24", time: "08:00", location: "トロント" },
+            { group: "L", team1: "🇵🇦 パナマ", team2: "🇬🇧 イングランド", date: "2026-06-28", time: "06:00", location: "ニューヨーク" },
+            { group: "L", team1: "🇭🇷 クロアチア", team2: "🇬🇭 ガーナ", date: "2026-06-28", time: "06:00", location: "フィラデルフィア" },
+        ];
+
+        function getMatchDateTime(dateStr, timeStr) {
+            const [year, month, day] = dateStr.split('-');
+            const [hours, minutes] = timeStr.split(':');
+            return new Date(year, parseInt(month) - 1, day, parseInt(hours), parseInt(minutes));
+        }
+
+        function formatDate(date) {
+            const days = ['日', '月', '火', '水', '木', '金', '土'];
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const dayOfWeek = days[date.getDay()];
+            return `${month}/${day}(${dayOfWeek})`;
+        }
+
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        function isMatchCompleted(match) {
+            const matchDate = getMatchDateTime(match.date, match.time);
+            return matchDate < new Date();
+        }
+
+        function getCountdownText(match) {
+            const matchDate = getMatchDateTime(match.date, match.time);
+            const now = new Date();
+            const diffMs = matchDate - now;
+
+            if (diffMs < 0) return '試合終了';
+
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+
+            if (diffDays > 0) {
+                return `あと${diffDays}日${diffHours}時間`;
+            } else if (diffHours > 0) {
+                return `あと${diffHours}時間`;
+            } else {
+                const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                return `あと${diffMinutes}分`;
+            }
+        }
+
+        function createMatchCard(match, highlight = false) {
+            const matchDate = getMatchDateTime(match.date, match.time);
+            const isCompleted = isMatchCompleted(match);
+
+            const card = document.createElement('div');
+            card.className = `card ${highlight ? 'highlight' : ''} ${isCompleted ? 'completed' : ''}`;
+            
+            card.innerHTML = `
+                <div class="match-card">
+                    <div class="match-team">
+                        <div class="match-team-flag">${match.team1.split(' ')[0]}</div>
+                        <div class="match-team-name">${match.team1.split(' ').slice(1).join(' ')}</div>
+                    </div>
+                    <div class="match-center">
+                        <div class="match-date">${formatDate(matchDate)}</div>
+                        <div class="match-time">${formatTime(matchDate)}</div>
+                        <div class="match-stage">グループ${match.group}</div>
+                        ${!isCompleted ? `<div class="match-countdown">${getCountdownText(match)}</div>` : ''}
+                        <div class="match-location">${match.location}</div>
+                    </div>
+                    <div class="match-team">
+                        <div class="match-team-flag">${match.team2.split(' ')[0]}</div>
+                        <div class="match-team-name">${match.team2.split(' ').slice(1).join(' ')}</div>
+                    </div>
+                </div>
+            `;
+
+            return card;
+        }
+
+        function renderNextMatch() {
+            const container = document.getElementById('next-match-container');
+            const now = new Date();
+            const upcoming = MATCHES.filter(m => getMatchDateTime(m.date, m.time) >= now);
+
+            container.innerHTML = upcoming.length > 0 
+                ? '' 
+                : '<div class="empty-state"><div class="empty-state-icon">🎉</div><p>全試合終了！</p></div>';
+            
+            if (upcoming.length > 0) {
+                container.appendChild(createMatchCard(upcoming[0], true));
+            }
+        }
+
+        function renderNextJapanMatch() {
+            const container = document.getElementById('next-japan-match-container');
+            const now = new Date();
+            const japan = MATCHES.filter(m => 
+                (m.team1.includes('日本') || m.team2.includes('日本')) && 
+                getMatchDateTime(m.date, m.time) >= now
+            );
+
+            container.innerHTML = japan.length > 0 
+                ? '' 
+                : '<div class="empty-state"><p>日本代表の試合はありません</p></div>';
+            
+            if (japan.length > 0) {
+                container.appendChild(createMatchCard(japan[0], true));
+            }
+        }
+
+        function renderSevenDaysPreview() {
+            const container = document.getElementById('seven-days-preview-container');
+            const now = new Date();
+            const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            const matches = MATCHES.filter(m => {
+                const md = getMatchDateTime(m.date, m.time);
+                return md >= now && md <= sevenDays;
+            }).slice(0, 3);
+
+            container.innerHTML = matches.length > 0 ? '' : '<div class="empty-state"><p>今後7日間の試合はありません</p></div>';
+            matches.forEach(m => container.appendChild(createMatchCard(m)));
+        }
+
+        function renderSevenDaysFull() {
+            const container = document.getElementById('seven-days-container');
+            const now = new Date();
+            const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            const matches = MATCHES.filter(m => {
+                const md = getMatchDateTime(m.date, m.time);
+                return md >= now && md <= sevenDays;
+            });
+
+            container.innerHTML = matches.length > 0 ? '' : '<div class="empty-state"><div class="empty-state-icon">📅</div><p>今後7日間の試合がありません</p></div>';
+            matches.forEach(m => container.appendChild(createMatchCard(m)));
+        }
+
+        function renderAllMatches() {
+            const container = document.getElementById('all-matches-container');
+            const now = new Date();
+            const matches = MATCHES.filter(m => getMatchDateTime(m.date, m.time) >= now);
+
+            container.innerHTML = matches.length > 0 ? '' : '<div class="empty-state"><div class="empty-state-icon">🏆</div><p>表示する試合がありません</p></div>';
+            matches.forEach(m => container.appendChild(createMatchCard(m)));
+        }
+
+        function renderStats() {
+            const now = new Date();
+            const remaining = MATCHES.filter(m => getMatchDateTime(m.date, m.time) >= now).length;
+            const lastMatch = MATCHES[MATCHES.length - 1];
+            const lastDate = getMatchDateTime(lastMatch.date, lastMatch.time);
+            const days = Math.ceil((lastDate - now) / (1000 * 60 * 60 * 24));
+
+            document.getElementById('total-matches').textContent = remaining;
+            document.getElementById('days-remaining').textContent = days;
+        }
+
+        function renderSearchFilters() {
+            const container = document.getElementById('group-filter');
+            const groups = [...new Set(MATCHES.map(m => m.group))].sort();
+            
+            container.innerHTML = '';
+            groups.forEach(group => {
+                const chip = document.createElement('button');
+                chip.className = 'chip';
+                chip.textContent = `グループ${group}`;
+                chip.onclick = () => { chip.classList.toggle('active'); filterSearch(); };
+                container.appendChild(chip);
+            });
+        }
+
+        function filterSearch() {
+            const text = document.getElementById('search-input').value.toLowerCase();
+            const active = Array.from(document.querySelectorAll('.chip.active')).map(c => c.textContent);
+            const results = document.getElementById('search-results-container');
+
+            const matches = MATCHES.filter(m => {
+                if (getMatchDateTime(m.date, m.time) < new Date()) return false;
+                
+                const fullText = `${m.team1} ${m.team2} ${m.location}`.toLowerCase();
+                const matchText = !text || fullText.includes(text);
+                const matchGroup = active.length === 0 || active.some(a => m.group === a.replace('グループ', ''));
+                
+                return matchText && matchGroup;
+            });
+
+            results.innerHTML = matches.length > 0 ? '' : '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>検索結果がありません</p></div>';
+            matches.forEach(m => results.appendChild(createMatchCard(m)));
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tab = document.getElementById(btn.dataset.tab + '-tab');
+                tab.classList.add('active');
+
+                if (btn.dataset.tab === 'search') renderSearchFilters();
+                else if (btn.dataset.tab === 'seven-days') renderSevenDaysFull();
+                else if (btn.dataset.tab === 'all') renderAllMatches();
+            });
+        });
+
+        document.getElementById('search-button').addEventListener('click', filterSearch);
+        document.getElementById('search-input').addEventListener('keyup', filterSearch);
+
+        setInterval(() => {
+            renderNextMatch();
+            renderNextJapanMatch();
+            renderStats();
+        }, 30000);
+
+        renderNextMatch();
+        renderNextJapanMatch();
+        renderSevenDaysPreview();
+        renderStats();
+    </script>
+</body>
+</html>
